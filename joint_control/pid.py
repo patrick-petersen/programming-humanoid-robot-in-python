@@ -35,9 +35,13 @@ class PIDController(object):
         self.e2 = np.zeros(size)
         # ADJUST PARAMETERS BELOW
         delay = 0
-        self.Kp = 0
-        self.Ki = 0
-        self.Kd = 0
+        self.Kp = 50
+        self.Ki = 1
+        self.Kd = 1
+
+        self.Derivator=0
+        self.Integrator=0
+
         self.y = deque(np.zeros(size), maxlen=delay + 1)
 
     def set_delay(self, delay):
@@ -54,6 +58,43 @@ class PIDController(object):
         '''
         # YOUR CODE HERE
 
+        self.error = target - sensor
+        self.P_value = self.Kp * self.error
+        self.D_value = self.Kd * ( self.error - self.Derivator)
+        self.Derivator = self.error
+
+        self.Integrator = self.Integrator + self.error
+
+        self.I_value = self.Integrator * self.Ki
+
+        self.u = self.P_value + self.I_value + self.D_value
+
+        #print(self.u)
+        '''
+
+        u(t) = KP * e(t) + Ki * (S_0^t e(tau) dtau) + (Kd de/dt)
+
+
+        self.error = self.set_point - current_value
+
+        self.P_value = self.Kp * self.error
+        self.D_value = self.Kd * ( self.error - self.Derivator)
+        self.Derivator = self.error
+
+        self.Integrator = self.Integrator + self.error
+
+        if self.Integrator > self.Integrator_max:
+            self.Integrator = self.Integrator_max
+        elif self.Integrator < self.Integrator_min:
+            self.Integrator = self.Integrator_min
+
+        self.I_value = self.Integrator * self.Ki
+
+        PID = self.P_value + self.I_value + self.D_value
+
+        return PID
+
+        '''
         return self.u
 
 
