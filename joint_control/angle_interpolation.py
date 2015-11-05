@@ -41,6 +41,43 @@ class AngleInterpolationAgent(PIDAgent):
     def angle_interpolation(self, keyframes):
         target_joints = {}
         # YOUR CODE HERE
+        self.currentTime = self.perception.time
+        if not self.firstTime:
+            self.firstTime = self.currentTime
+
+        (names, times, keys) = keyframes
+
+        timeInKeyframes = self.currentTime - self.firstTime
+
+        for nameIndex in range(0, len(names)):
+            #iterare through all joints
+            name = names[nameIndex]
+            timesForName = times[nameIndex]
+            keysForName = keys[nameIndex]
+
+            prevTime = timesForName[0]
+            nextTime = timesForName[0]
+
+            i = 0
+            while i < len(timesForName) and timeInKeyframes > timesForName[i]:
+                '''
+                Iterate through all "times" for a given joint.
+                Find the next (and prev.) keyframe.
+                afterword we can interpolate with the formula below
+                with
+                t = timeInKeyframes,
+                P0 = (timesForName[i], keysForName[i][0])
+                P1 = (timesForName[i] + keysForName[i][2][1], keysForName[i][0] + keysForName[i][2][2])
+
+                If we are behind the last keyframe P2 = P0 and P3 = P1?
+
+                P2 = (timesForName[i+1], keysForName[i+1][0])
+                P3 = (timesForName[i+1] + keysForName[i+1][1][1], keysForName[i+1][0] + keysForName[i+1][1][2])
+                '''
+
+                i++
+
+        #(1-t) ** 3 * P0 + 3*(1-t) ** 2 * t * P1 + 3 * (1-t) * t ** 2 * P2 + t**3 * P3
 
         return target_joints
 
