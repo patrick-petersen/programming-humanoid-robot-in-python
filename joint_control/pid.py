@@ -35,12 +35,9 @@ class PIDController(object):
         self.e2 = np.zeros(size)
         # ADJUST PARAMETERS BELOW
         delay = 0
-        self.Kp = 50
-        self.Ki = 1
-        self.Kd = 1
-
-        self.Derivator=0
-        self.Integrator=0
+        self.Kp = 29
+        self.Ki = 0.1
+        self.Kd = 0.2
 
         self.y = deque(np.zeros(size), maxlen=delay + 1)
 
@@ -60,12 +57,12 @@ class PIDController(object):
 
         self.error = target - sensor
         self.P_value = self.Kp * self.error
-        self.D_value = self.Kd * ( self.error - self.Derivator)
-        self.Derivator = self.error
+        self.D_value = self.Kd * ( self.error - self.e1)
+        self.e1 = self.error
 
-        self.Integrator = self.Integrator + self.error
+        self.e2 = self.e2 + self.error # * time
 
-        self.I_value = self.Integrator * self.Ki
+        self.I_value = self.e2 * self.Ki
 
         self.u = self.P_value + self.I_value + self.D_value
 
