@@ -23,6 +23,7 @@
 from pid import PIDAgent
 from keyframes import hello
 
+firstTime = 0 # does not work the way intendent
 
 class AngleInterpolationAgent(PIDAgent):
     def __init__(self, simspark_ip='localhost',
@@ -32,7 +33,7 @@ class AngleInterpolationAgent(PIDAgent):
                  sync_mode=True):
         super(AngleInterpolationAgent, self).__init__(simspark_ip, simspark_port, teamname, player_id, sync_mode)
         self.keyframes = ([], [], [])
-
+    
     def think(self, perception):
         target_joints = self.angle_interpolation(self.keyframes)
         self.target_joints.update(target_joints)
@@ -40,14 +41,15 @@ class AngleInterpolationAgent(PIDAgent):
 
     def angle_interpolation(self, keyframes):
         target_joints = {}
+	global firstTime
         # YOUR CODE HERE
         self.currentTime = self.perception.time
-        if not self.firstTime:
-            self.firstTime = self.currentTime
+        if firstTime == 0:
+            firstTime = self.currentTime
 
         (names, times, keys) = keyframes
 
-        timeInKeyframes = self.currentTime - self.firstTime
+        timeInKeyframes = self.currentTime - firstTime
 
         for nameIndex in range(0, len(names)):
             #iterare through all joints
@@ -59,7 +61,9 @@ class AngleInterpolationAgent(PIDAgent):
             nextTime = timesForName[0]
 
             i = 0
-            while i < len(timesForName) and timeInKeyframes > timesForName[i]:
+	    
+            while i < len(timesForName)-2 and timeInKeyframes > timesForName[i]:
+		i += 1
                 '''
                 Iterate through all "times" for a given joint.
                 Find the next (and prev.) keyframe.
@@ -74,9 +78,21 @@ class AngleInterpolationAgent(PIDAgent):
                 P2 = (timesForName[i+1], keysForName[i+1][0])
                 P3 = (timesForName[i+1] + keysForName[i+1][1][1], keysForName[i+1][0] + keysForName[i+1][1][2])
                 '''
-
-                i++
-
+		
+	    
+	    P0 = (timesForName[i], keysForName[i][0])
+ 	    P1 = (timesForName[i] + keysForName[i][2][1], keysForName[i][0] + keysForName[i][2][2])
+            P2 = (0,0)
+ 	    P3 = (0,0)
+	    #P2 ist out of index range for some reason
+	    P2 = (timesForName[i+1], keysForName[i+1][0]) #
+            P3 = (timesForName[i+1] + keysForName[i+1][1][1], keysForName[i+1][0] + keysForName[i+1][1][2]) 
+	           
+	    
+	    k = 1 # normally the left time intervall border, but time is in this case not element of [0,1]
+	    target_joints[name] = (k-timeInKeyframes) ** 3 * P0[1] + 3*(k-timeInKeyframes) ** 2 * timeInKeyframes * P1[1] + 3 * (k-timeInKeyframes) * timeInKeyframes ** 2 * P2[1] + timeInKeyframes**3 * P3[1]
+	# also, don't we just need on of the coordinates, because the second would be the time, wich we have
+	
         #(1-t) ** 3 * P0 + 3*(1-t) ** 2 * t * P1 + 3 * (1-t) * t ** 2 * P2 + t**3 * P3
 
         return target_joints
