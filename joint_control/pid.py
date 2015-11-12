@@ -57,14 +57,18 @@ class PIDController(object):
 
         self.error = target - sensor
         self.P_value = self.Kp * self.error
-        self.D_value = self.Kd * ( self.error - self.e1)
+        self.D_value = self.Kd * ( self.error - self.e1) / self.dt
         self.e1 = self.error
 
-        self.e2 = self.e2 + self.error # * time
+        self.e2 = self.e2 + self.error * self.dt
 
         self.I_value = self.e2 * self.Ki
 
         self.u = self.P_value + self.I_value + self.D_value
+
+        self.y.append(self.u)
+
+
 
         #print(self.u)
         '''
@@ -92,7 +96,7 @@ class PIDController(object):
         return PID
 
         '''
-        return self.u
+        return self.y.popleft()
 
 
 class PIDAgent(SparkAgent):
