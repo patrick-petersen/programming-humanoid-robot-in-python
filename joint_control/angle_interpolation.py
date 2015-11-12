@@ -25,6 +25,9 @@ from keyframes import hello
 
 firstTime = 0 # does not work the way intendentt
 timeSet = False
+maxTimesForNames = 0
+
+
 class AngleInterpolationAgent(PIDAgent):
     def __init__(self, simspark_ip='localhost',
                  simspark_port=3100,
@@ -41,18 +44,29 @@ class AngleInterpolationAgent(PIDAgent):
 
     def angle_interpolation(self, keyframes, perception):
         target_joints = {}
+        # YOUR CODE HERE
         global firstTime
         global timeSet
-        # YOUR CODE HERE
-        self.currentTime = self.perception.time
-        if timeSet == False:
-            firstTime = self.currentTime
-            timeSet = True
+        global maxTimesForNames
+
         (names, times, keys) = keyframes
+        self.currentTime = self.perception.time
+
+        if maxTimesForNames == 0:
+            for nameIndex in range(0, len(names)):
+                name = names[nameIndex]
+                timesForName = times[nameIndex]
+                keysForName = keys[nameIndex]
+                if timesForName[len(timesForName)-1]> maxTimesForNames:
+                    maxTimesForNames = timesForName[len(timesForName)-1]
+
 
         timeInKeyframes = self.currentTime - firstTime
 
-        maxTimesForNames = 0
+        if firstTime == 0:
+            firstTime = self.currentTime
+            timeInKeyframes = self.currentTime - firstTime
+
         for nameIndex in range(0, len(names)):
             #iterare through all joints
             name = names[nameIndex]
@@ -61,32 +75,54 @@ class AngleInterpolationAgent(PIDAgent):
 
             #prevTime = timesForName[0]
             #nextTime = timesForName[0]
-            i = 0
-            while i < len(timesForName)-2 and timeInKeyframes > timesForName[i]:
-                i += 1
+            if timeInKeyframes < timesForName[0]:
+                '''
+                before the first keyframe
+                take the left handle of the first keyframe as second handle of the current position
 
-            P0 = (timesForName[i], keysForName[i][0])
-            P1 = (timesForName[i] + keysForName[i][2][1], keysForName[i][0] + keysForName[i][2][2])
-            #P2 ist out of index range for some reason when len(timeForName)-1
-            P2 = (timesForName[i+1], keysForName[i+1][0]) #
-            P3 = (timesForName[i+1] + keysForName[i+1][1][1], keysForName[i+1][0] + keysForName[i+1][1][2]) 
-            t = timeInKeyframes - timesForName[i]
-            k = timesForName[i+1] - timesForName[i]
-            # normally the right time intervall border, but time is in this case not element of [0,1]
-            # k should be the next Keyframe, relaive to the prev. keyframe
-            target_joints[name] = ((k-t) ** 3) * P0[1] + 3 * ((k-t) ** 2) * t * P1[1] + 3 * (k-t) * (t ** 2) * P2[1] + (t**3) * P3[1]
-            if timesForName[len(timesForName)-1]> maxTimesForNames:
-                maxTimesForNames = timesForName[len(timesForName)-1]
+                '''
+                if not name in self.perception.joint:
+                    continue
 
+                P0 = (timeInKeyframes, self.perception.joint[name])
+                P1 = (timesForName[0] + keysForName[0][1][1], keysForName[0][0] + keysForName[0][1][2])
+                P2 = (timesForName[0], keysForName[0][0]) #
+                P3 = (timesForName[0] + keysForName[0][1][1], keysForName[0][0] + keysForName[0][1][2])
 
-            print(name, timesForName[i], timeInKeyframes, timesForName[i+1])
-            
-        # also, don't we just need on of the coordinates, because the second would be the time, wich we have
-        #1-t mit 1 = k wie oben
-        #(1-t) ** 3 * P0 + 3*(1-t) ** 2 * t * P1 + 3 * (1-t) * t ** 2 * P2 + t**3 * P3
-        
-        if timeInKeyframes > maxTimesForNames:
-            timeSet = False
+                t = (timeInKeyframes - firstTime) / (timesForName[0] - firstTime)
+                k = 1
+
+                #try to get rid of minor float errors
+                if t > 1:
+                    t = 1.0
+
+                target_joints[name] = ((k-t) ** 3) * P0[1] + 3 * ((k-t) ** 2) * t * P1[1] + 3 * (k-t) * (t ** 2) * P2[1] + (t**3) * P3[1]
+
+            else:
+
+                if timeInKeyframes >= timesForName[-1]:
+                    continue
+
+                i = 0
+                while timeInKeyframes > timesForName[i]:
+                    i += 1
+
+                i = i - 1
+
+                P0 = (timesForName[i], keysForName[i][0])
+                P1 = (timesForName[i] + keysForName[i][2][1], keysForName[i][0] + keysForName[i][2][2])
+                P2 = (timesForName[i+1], keysForName[i+1][0]) #
+                P3 = (timesForName[i+1] + keysForName[i+1][1][1], keysForName[i+1][0] + keysForName[i+1][1][2]) 
+
+                t = (timeInKeyframes - timesForName[i]) / (timesForName[i+1] - timesForName[i])
+                k = 1
+
+                #try to get rid of minor float errors
+                if t > 1:
+                    t = 1.0
+
+                target_joints[name] = ((k-t) ** 3) * P0[1] + 3 * ((k-t) ** 2) * t * P1[1] + 3 * (k-t) * (t ** 2) * P2[1] + (t**3) * P3[1]
+                
 
         return target_joints
 
