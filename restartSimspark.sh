@@ -1,4 +1,4 @@
 until simspark; do
-    echo "simspark 'myserver' crashed with exit code $?.  Respawning.." >&2
+    echo "simspark crashed with exit code $?.  Respawning.." >&2
     sleep 1
 done
