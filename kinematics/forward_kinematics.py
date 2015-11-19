@@ -54,6 +54,34 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
         T = matrix()
         # YOUR CODE HERE
 
+        if joint_name.endswith("Pitch"):
+            #X
+            T = matrix([
+                    [1, 0, 0, 0], 
+                    [0, cos(joint_angle), - sin(joint_angle), 0], 
+                    [0, sin(joint_angle), cos(joint_angle), 0], 
+                    [0, 0, 0, 1]
+                    ])
+        elif joint_name.endswith("Yaw"):
+            #Y
+            T = matrix([
+                    [cos(joint_angle), 0, sin(joint_angle), 0], 
+                    [0, 1, 0, 0], 
+                    [-sin(joint_angle),0, cos(joint_angle), 0], 
+                    [0, 0, 0, 1]
+                    ])
+        elif joint_name.endswith("Roll"):
+            #Z
+            T = matrix([
+                    [cos(joint_angle), -sin(joint_angle), 0, 0], 
+                    [sin(joint_angle), cos(joint_angle), 0, 0], 
+                    [0, 0, 1, 0], 
+                    [0, 0, 0, 1]
+                    ])
+        else:
+            print "Error!!"
+            print joint_name
+
         return T
 
     def forward_kinematics(self, joints):
