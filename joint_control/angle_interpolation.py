@@ -22,6 +22,8 @@
 
 from pid import PIDAgent
 from keyframes import hello
+from keyframes import fall_over
+from keyframes import rightBackToStand
 
 firstTime = 0 # does not work the way intendentt
 timeSet = False
@@ -62,6 +64,9 @@ class AngleInterpolationAgent(PIDAgent):
 
 
         timeInKeyframes = self.currentTime - firstTime
+
+        if maxTimesForNames < timeInKeyframes:
+            firstTime = 0;
 
         if firstTime == 0:
             firstTime = self.currentTime
@@ -128,5 +133,5 @@ class AngleInterpolationAgent(PIDAgent):
 
 if __name__ == '__main__':
     agent = AngleInterpolationAgent()
-    agent.keyframes = hello()  # CHANGE DIFFERENT KEYFRAMES
+    agent.keyframes = rightBackToStand()  # CHANGE DIFFERENT KEYFRAMES
     agent.run()
