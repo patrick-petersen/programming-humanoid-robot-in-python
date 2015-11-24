@@ -12,6 +12,7 @@
 
 from angle_interpolation import AngleInterpolationAgent
 from keyframes import hello
+from keyframes import rightBackToStand
 
 import pickle
 from os import listdir, path
@@ -63,5 +64,5 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
 
 if __name__ == '__main__':
     agent = PostureRecognitionAgent()
-    agent.keyframes = hello()  # CHANGE DIFFERENT KEYFRAMES
+    agent.keyframes = rightBackToStand()  # CHANGE DIFFERENT KEYFRAMES
     agent.run()

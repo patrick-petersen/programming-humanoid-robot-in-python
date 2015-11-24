@@ -46,7 +46,7 @@ class AngleInterpolationAgent(PIDAgent):
     def angle_interpolation(self, keyframes, perception):
         target_joints = {}
         # YOUR CODE HERE
-	loopKeyframes = true
+	loopKeyframes = True
 
         (names, times, keys) = keyframes
         self.currentTime = self.perception.time
@@ -62,10 +62,10 @@ class AngleInterpolationAgent(PIDAgent):
 
         timeInKeyframes = self.currentTime - self.firstTime
 
-        if maxTimesForNames < timeInKeyframes and loopKeyframes:
+        if self.maxTimesForNames < timeInKeyframes and loopKeyframes:
             self.firstTime = 0;
 
-        if firstTime == 0:
+        if self.firstTime == 0:
             self.firstTime = self.currentTime
             timeInKeyframes = self.currentTime - self.firstTime
 
