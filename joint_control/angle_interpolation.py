@@ -25,9 +25,6 @@ from keyframes import hello
 from keyframes import fall_over
 from keyframes import rightBackToStand
 
-firstTime = 0 # does not work the way intendentt
-timeSet = False
-maxTimesForNames = 0
 
 
 class AngleInterpolationAgent(PIDAgent):
@@ -38,7 +35,9 @@ class AngleInterpolationAgent(PIDAgent):
                  sync_mode=True):
         super(AngleInterpolationAgent, self).__init__(simspark_ip, simspark_port, teamname, player_id, sync_mode)
         self.keyframes = ([], [], [])
-    
+        self.firstTime = 0 #sets the time when the animation did first start
+        self.maxTimesForNames = 0 #for finding the latest keyframe and have a indicator when to stop and set next firsttime    	
+
     def think(self, perception):
         target_joints = self.angle_interpolation(self.keyframes, perception)
         self.target_joints.update(target_joints)
@@ -47,30 +46,29 @@ class AngleInterpolationAgent(PIDAgent):
     def angle_interpolation(self, keyframes, perception):
         target_joints = {}
         # YOUR CODE HERE
-        global firstTime
-        global timeSet
-        global maxTimesForNames
+	loopKeyframes = true
 
         (names, times, keys) = keyframes
         self.currentTime = self.perception.time
 
-        if maxTimesForNames == 0:
+        if self.maxTimesForNames == 0:
             for nameIndex in range(0, len(names)):
                 name = names[nameIndex]
                 timesForName = times[nameIndex]
                 keysForName = keys[nameIndex]
-                if timesForName[len(timesForName)-1]> maxTimesForNames:
-                    maxTimesForNames = timesForName[len(timesForName)-1]
+                if timesForName[len(timesForName)-1]> self.maxTimesForNames:
+                   self.maxTimesForNames = timesForName[len(timesForName)-1]
 
 
-        timeInKeyframes = self.currentTime - firstTime
+        timeInKeyframes = self.currentTime - self.firstTime
 
-        if maxTimesForNames < timeInKeyframes:
-            firstTime = 0;
+        if maxTimesForNames < timeInKeyframes and loopKeyframes:
+            self.firstTime = 0;
 
         if firstTime == 0:
-            firstTime = self.currentTime
-            timeInKeyframes = self.currentTime - firstTime
+            self.firstTime = self.currentTime
+            timeInKeyframes = self.currentTime - self.firstTime
+
 
         for nameIndex in range(0, len(names)):
             #iterare through all joints
@@ -94,7 +92,7 @@ class AngleInterpolationAgent(PIDAgent):
                 P2 = (timesForName[0], keysForName[0][0]) #
                 P3 = (timesForName[0] + keysForName[0][1][1], keysForName[0][0] + keysForName[0][1][2])
 
-                t = (timeInKeyframes - firstTime) / (timesForName[0] - firstTime)
+                t = (timeInKeyframes - self.firstTime) / (timesForName[0] - self.firstTime)
                 k = 1
 
                 #try to get rid of minor float errors
