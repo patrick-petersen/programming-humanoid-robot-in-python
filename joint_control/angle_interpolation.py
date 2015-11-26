@@ -23,7 +23,7 @@
 from pid import PIDAgent
 from keyframes import hello
 from keyframes import fall_over
-from keyframes import rightBackToStand
+from keyframes import leftBackToStand
 
 
 
@@ -131,5 +131,5 @@ class AngleInterpolationAgent(PIDAgent):
 
 if __name__ == '__main__':
     agent = AngleInterpolationAgent()
-    agent.keyframes = rightBackToStand()  # CHANGE DIFFERENT KEYFRAMES
+    agent.keyframes = leftBackToStand()  # CHANGE DIFFERENT KEYFRAMES
     agent.run()
