@@ -18,6 +18,7 @@
 # add PYTHONPATH
 import os
 import sys
+import math
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'joint_control'))
 
 from numpy.matlib import matrix, identity
@@ -37,11 +38,13 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
         # chains defines the name of chain and joints of the chain
         self.chains = {'Head': ['HeadYaw', 'HeadPitch'],
                       # YOUR CODE HERE
-                      'LeftArmJoints' : ['LShoulderPitch', 'LShoulderRoll', 'LElbowYaw', 'LElbowRoll', 'LWristYaw', 'LHand'],
-                      'RightArmJoints' : ['RShoulderPitch', 'RShoulderRoll', 'RElbowYaw', 'RElbowRoll', 'RWristYaw', 'RHand'],
+                      #'LeftArmJoints' : ['LShoulderPitch', 'LShoulderRoll', 'LElbowYaw', 'LElbowRoll', 'LWristYaw', 'LHand'],
+                      'LeftArmJoints' : ['LShoulderPitch', 'LShoulderRoll', 'LElbowYaw', 'LElbowRoll'],
+                      #'RightArmJoints' : ['RShoulderPitch', 'RShoulderRoll', 'RElbowYaw', 'RElbowRoll', 'RWristYaw', 'RHand'],
+                      'RightArmJoints' : ['RShoulderPitch', 'RShoulderRoll', 'RElbowYaw', 'RElbowRoll'],
                       'PelvisJoints' : ['LHipYawPitch', 'RHipYawPitch'], #LHipYawPitch and RHipYawPitch are physically just one motor so they cannot be controlled independently. In case of conflicting orders, LHipYawPitch always takes the priority.
                       'LeftLegJoints' : ['LHipRoll', 'LHipPitch', 'LKneePitch', 'LAnklePitch', 'LAnkleRoll'],
-                      'RightLegJoints' : ['RHipRoll', 'RHipPitch', 'RKneePitch', 'RAnklePitch', 'RAnkleRoll'],
+                      'RightLegJoints' : ['RHipRoll', 'RHipPitch', 'RKneePitch', 'RAnklePitch', 'RAnkleRoll']
                        }
         #the coordination ar always to the named joint and are in mm
         #the joint from is torso if first in line or the prior in line 
@@ -51,7 +54,7 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
                       'LHipYawPitch': (0,50, -85),
                       'LHipRoll': (0,0,0), 'LHipPitch':(0,0,0), 'LKneePitch': (0,0,-100), 'LAnklePitch': (0,0,-102.9), 'LAnkleRoll' : (0,0,0),
                       'RHipYawPitch': (0,-50, -85),
-                      'RHipRoll': (0,0,0), 'RHipPitch': (0,0,0), 'RKneePitch': (0,0,-100), 'RAnklePitch' (0,0,-102.9), 'RAnkleRoll': (0,0,0),
+                      'RHipRoll': (0,0,0), 'RHipPitch': (0,0,0), 'RKneePitch': (0,0,-100), 'RAnklePitch': (0,0,-102.9), 'RAnkleRoll': (0,0,0)
                        }
 
 
@@ -67,30 +70,30 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
         :return: transformation
         :rtype: 4x4 matrix
         '''
-        T = matrix()
+        T = matrix((4,4))
         # YOUR CODE HERE
 
         if joint_name.endswith("Pitch"):
             #X
             T = matrix([
                     [1, 0, 0, 0], 
-                    [0, cos(joint_angle), - sin(joint_angle), 0], 
-                    [0, sin(joint_angle), cos(joint_angle), 0], 
+                    [0, math.cos(joint_angle), - math.sin(joint_angle), 0], 
+                    [0, math.sin(joint_angle), math.cos(joint_angle), 0], 
                     [0, 0, 0, 1]
                     ])
         elif joint_name.endswith("Yaw"):
             #Y
             T = matrix([
-                    [cos(joint_angle), 0, sin(joint_angle), 0], 
+                    [math.cos(joint_angle), 0, math.sin(joint_angle), 0], 
                     [0, 1, 0, 0], 
-                    [-sin(joint_angle),0, cos(joint_angle), 0], 
+                    [-math.sin(joint_angle),0, math.cos(joint_angle), 0], 
                     [0, 0, 0, 1]
                     ])
         elif joint_name.endswith("Roll"):
             #Z
             T = matrix([
-                    [cos(joint_angle), -sin(joint_angle), 0, 0], 
-                    [sin(joint_angle), cos(joint_angle), 0, 0], 
+                    [math.cos(joint_angle), -math.sin(joint_angle), 0, 0], 
+                    [math.sin(joint_angle), math.cos(joint_angle), 0, 0], 
                     [0, 0, 1, 0], 
                     [0, 0, 0, 1]
                     ])
@@ -109,10 +112,11 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
             T = identity(4)
             for joint in chain_joints:
                 angle = joints[joint]
-                Tl = local_trans(joint, angle)
+                Tl = self.local_trans(joint, angle)
                 # YOUR CODE HERE
+                T = T * Tl
 
-                self.transforms[joint] = T
+                self.transforms[joint] = T * self.chainsCordination[joint]
 
 if __name__ == '__main__':
     agent = ForwardKinematicsAgent()
